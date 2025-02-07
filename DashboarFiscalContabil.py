@@ -152,17 +152,17 @@ if uploaded_file is not None:
             col4.metric("Total Folha", format_brl(total_folha))
             
             # Criação de uma coluna para Despesas Totais (soma das despesas selecionadas)
+            # Excluímos "CARTAO E PIX" desta soma.
             despesas_list = [
-                "COMPRAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS", "MULTA FGTS",
-                "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB", "Contrib. Assistencial",
-                "ISSQN Retido", "CARTAO E PIX"
+                "COMPRAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS",
+                "MULTA FGTS", "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB",
+                "Contrib. Assistencial", "ISSQN Retido"
             ]
             despesas_selecionadas = [col for col in despesas_list if col in selected_metrics]
             if despesas_selecionadas:
                 df["Despesas Totais"] = df[despesas_selecionadas].sum(axis=1)
             
-            # Para cada gráfico, atualizamos os eixos e os _hover templates_ para mostrar
-            # os números completos, sem abreviação, com dois dígitos decimais.
+            # Para cada gráfico, forçamos a exibição dos números completos (sem abreviação)
             
             # Gráfico 1: Evolução das Vendas
             if "VENDAS" in selected_metrics:
@@ -221,7 +221,8 @@ if uploaded_file is not None:
                 st.markdown("</div>", unsafe_allow_html=True)
             
             # Gráfico adicional: Comparativo de Outras Métricas
-            selected_other_metrics = [m for m in selected_metrics if m not in ["VENDAS", "COMPRAS", "DAS"]]
+            # Excluímos "CARTAO E PIX" deste comparativo, pois ele terá gráfico próprio.
+            selected_other_metrics = [m for m in selected_metrics if m not in ["VENDAS", "COMPRAS", "DAS", "CARTAO E PIX"]]
             if selected_other_metrics:
                 fig_other = px.line(
                     df, x=x_axis, y=selected_other_metrics,
@@ -233,6 +234,20 @@ if uploaded_file is not None:
                 fig_other.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_other, use_container_width=True, config={"locale": "pt-BR"})
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Novo Gráfico: Comparativo de Vendas vs CARTAO E PIX
+            if "CARTAO E PIX" in selected_metrics:
+                fig_cartao = px.line(
+                    df, x=x_axis, y=["VENDAS", "CARTAO E PIX"],
+                    title="Comparativo: Vendas vs Cartão e PIX",
+                    markers=True,
+                    template="plotly_white"
+                )
+                fig_cartao.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_cartao.update_traces(hovertemplate='%{y:,.2f}')
+                st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+                st.plotly_chart(fig_cartao, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
         
         # --------------------------------------------------------------------------
