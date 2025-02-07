@@ -21,14 +21,13 @@ def converter_mes(valor):
     return pd.NaT  # Retorna Not a Time se nenhum formato funcionar
 
 # ------------------------------------------------------------------------------
-# Função para formatar números no padrão brasileiro (usando ponto para milhares e vírgula para decimais)
+# Função para formatar números no padrão brasileiro (ponto para milhares e vírgula para decimais)
+# Se o valor for 0 ou NaN, retorna string vazia.
 # ------------------------------------------------------------------------------
 def format_brl(x):
     try:
-        # Se x for 0 ou NaN, retorna string vazia
         if pd.isna(x) or (isinstance(x, (int, float)) and x == 0):
             return ""
-        # Formata o número: ex.: 1234.56 -> 1.234,56
         return format(x, ",.2f").replace(",", "X").replace(".", ",").replace("X", ".")
     except:
         return x
@@ -106,11 +105,11 @@ if uploaded_file is not None:
             df.sort_values("Data", inplace=True)
             x_axis = "Data"
         
-        # Se a conversão ocorreu, podemos criar uma coluna formatada com mês/ano para exibição na tabela
+        # Se a conversão ocorreu, criamos uma coluna formatada para exibição (mês/ano)
         if x_axis == "Data":
             df["MÊS_FORMATADO"] = df["Data"].dt.strftime("%m/%Y")
         
-        # Filtro de intervalo de datas (apenas se a conversão foi realizada)
+        # Filtro de intervalo de datas (apenas se a conversão ocorreu)
         if x_axis == "Data":
             min_date = df["Data"].min().date()
             max_date = df["Data"].max().date()
@@ -162,7 +161,8 @@ if uploaded_file is not None:
             if despesas_selecionadas:
                 df["Despesas Totais"] = df[despesas_selecionadas].sum(axis=1)
             
-            # Gráficos Interativos (configurando o locale para "pt-BR")
+            # Para cada gráfico, atualizamos os eixos e os _hover templates_ para mostrar
+            # os números completos, sem abreviação, com dois dígitos decimais.
             
             # Gráfico 1: Evolução das Vendas
             if "VENDAS" in selected_metrics:
@@ -172,7 +172,8 @@ if uploaded_file is not None:
                     markers=True,
                     template="plotly_white"
                 )
-                fig_vendas.update_layout(transition_duration=500)
+                fig_vendas.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_vendas.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_vendas, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -185,7 +186,8 @@ if uploaded_file is not None:
                     markers=True,
                     template="plotly_white"
                 )
-                fig_vdas.update_layout(transition_duration=500)
+                fig_vdas.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_vdas.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_vdas, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -198,7 +200,8 @@ if uploaded_file is not None:
                     markers=True,
                     template="plotly_white"
                 )
-                fig_vcompras.update_layout(transition_duration=500)
+                fig_vcompras.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_vcompras.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_vcompras, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -211,7 +214,8 @@ if uploaded_file is not None:
                     barmode="group",
                     template="plotly_white"
                 )
-                fig_resumo.update_layout(transition_duration=500)
+                fig_resumo.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_resumo.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_resumo, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
@@ -225,7 +229,8 @@ if uploaded_file is not None:
                     markers=True,
                     template="plotly_white"
                 )
-                fig_other.update_layout(transition_duration=500)
+                fig_other.update_yaxes(tickformat=',.2f', exponentformat='none')
+                fig_other.update_traces(hovertemplate='%{y:,.2f}')
                 st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.plotly_chart(fig_other, use_container_width=True, config={"locale": "pt-BR"})
                 st.markdown("</div>", unsafe_allow_html=True)
