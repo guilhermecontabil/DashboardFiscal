@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 import streamlit.components.v1 as components
 
+# A chamada de configuração da página deve ser a primeira instrução do app!
+st.set_page_config(page_title="Dashboard Fiscal Avançada", layout="wide")
+
 # --------------------------------------------------
 # Injeção de CSS para customização avançada
 # --------------------------------------------------
@@ -45,12 +48,7 @@ st.markdown(
 )
 
 # --------------------------------------------------
-# Configuração da página
-# --------------------------------------------------
-st.set_page_config(page_title="Dashboard Fiscal Avançada", layout="wide")
-
-# --------------------------------------------------
-# Header customizado com HTML (pode incorporar JS se necessário)
+# Header customizado com HTML
 # --------------------------------------------------
 components.html("""
 <div class="header">
@@ -85,7 +83,7 @@ if uploaded_file is not None:
             df.sort_values("MÊS", inplace=True)
             x_axis = "MÊS"
 
-        # Se possível, adiciona filtro de intervalo de datas (quando x_axis for Data)
+        # Filtro de intervalo de datas, caso a conversão para Data tenha ocorrido
         if x_axis == "Data":
             min_date = df["Data"].min().date()
             max_date = df["Data"].max().date()
@@ -96,9 +94,11 @@ if uploaded_file is not None:
         
         # Permite escolher as métricas a exibir
         st.sidebar.markdown("### Métricas para exibição")
-        metrics_options = ["COMPRAS", "VENDAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS",
-                           "MULTA FGTS", "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB",
-                           "Contrib. Assistencial", "ISSQN Retido", "CARTAO E PIX"]
+        metrics_options = [
+            "COMPRAS", "VENDAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS",
+            "MULTA FGTS", "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB",
+            "Contrib. Assistencial", "ISSQN Retido", "CARTAO E PIX"
+        ]
         selected_metrics = st.sidebar.multiselect("Selecione as métricas:", metrics_options, default=metrics_options)
         
         # --------------------------------------------------
@@ -125,17 +125,17 @@ if uploaded_file is not None:
         
         # --------------------------------------------------
         # Criação de uma coluna de Despesas Totais
-        # Considere as despesas de acordo com a lista definida
         # --------------------------------------------------
-        despesas_list = ["COMPRAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS", "MULTA FGTS",
-                         "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB", "Contrib. Assistencial", "ISSQN Retido", "CARTAO E PIX"]
+        despesas_list = [
+            "COMPRAS", "DAS", "FOLHA", "PRO-LABORE", "FGTS", "MULTA FGTS",
+            "RESCISÃO", "FÉRIAS", "13 SALARIO", "DCTFWEB", "Contrib. Assistencial", "ISSQN Retido", "CARTAO E PIX"
+        ]
         despesas_selecionadas = [col for col in despesas_list if col in selected_metrics]
         if despesas_selecionadas:
             df["Despesas Totais"] = df[despesas_selecionadas].sum(axis=1)
         
         # --------------------------------------------------
         # Gráficos Interativos com Plotly Express
-        # Cada gráfico é envolvido em um contêiner com estilo
         # --------------------------------------------------
 
         # Gráfico 1: Evolução das Vendas
