@@ -3,8 +3,21 @@ import pandas as pd
 import plotly.express as px
 import streamlit.components.v1 as components
 
-# A chamada de configuração da página deve ser a primeira instrução do app!
+# A chamada de configuração da página deve ser a primeira instrução!
 st.set_page_config(page_title="Dashboard Fiscal Avançada", layout="wide")
+
+# --------------------------------------------------
+# Função para converter a coluna MÊS utilizando vários formatos
+# --------------------------------------------------
+def converter_mes(valor):
+    formatos = ["%Y-%m", "%m/%Y", "%B %Y", "%b %Y"]  # Ex: "2023-05", "05/2023", "Maio 2023", "May 2023"
+    for fmt in formatos:
+        try:
+            # Tenta converter o valor usando o formato atual
+            return pd.to_datetime(valor, format=fmt)
+        except (ValueError, TypeError):
+            continue
+    return pd.NaT  # Retorna Not a Time se nenhum formato funcionar
 
 # --------------------------------------------------
 # Injeção de CSS para customização avançada
@@ -12,20 +25,13 @@ st.set_page_config(page_title="Dashboard Fiscal Avançada", layout="wide")
 st.markdown(
     """
     <style>
-    /* Importa fontes modernas do Google Fonts */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto&display=swap');
-
-    /* Define a fonte padrão */
     html, body, [class*="css"]  {
         font-family: 'Roboto', sans-serif;
     }
-    
-    /* Fundo geral da aplicação */
     .main {
         background: #f0f2f6;
     }
-
-    /* Estilização do header customizado */
     .header {
         text-align: center;
         padding: 30px;
@@ -34,8 +40,6 @@ st.markdown(
         border-radius: 10px;
         margin-bottom: 20px;
     }
-    
-    /* Estilo para os contêineres de gráficos e dados */
     .chart-container, .data-container {
         background: white;
         padding: 20px;
@@ -68,21 +72,28 @@ if uploaded_file is not None:
         # Leitura do arquivo XLSX
         df = pd.read_excel(uploaded_file)
         
-        # Verifica a existência da coluna MÊS
+        # Verifica se a coluna MÊS existe
         if "MÊS" not in df.columns:
             st.error("A coluna 'MÊS' não foi encontrada no arquivo.")
             st.stop()
 
-        # Converte a coluna MÊS para um objeto datetime (assumindo o formato 'YYYY-MM')
-        try:
-            df["Data"] = pd.to_datetime(df["MÊS"].astype(str) + "-01", format="%Y-%m-%d")
+        # Exibe os primeiros valores para conferência (opcional)
+        st.write("Exemplo de valores na coluna MÊS:", df["MÊS"].head())
+
+        # Converte a coluna MÊS para datetime utilizando a função personalizada
+        df["Data"] = df["MÊS"].apply(converter_mes)
+        
+        # Verifica se a conversão foi bem-sucedida (pelo menos um valor válido)
+        if df["Data"].isnull().all():
+            st.warning("Não foi possível converter a coluna 'MÊS' para data. Usaremos os valores originais.")
+            x_axis = "MÊS"
+            df.sort_values("MÊS", inplace=True)
+        else:
+            # Caso existam alguns NaT, pode ser interessante tratar ou filtrar esses registros
+            df = df[df["Data"].notnull()]
             df.sort_values("Data", inplace=True)
             x_axis = "Data"
-        except Exception as e:
-            st.warning("Não foi possível converter a coluna 'MÊS' para data. Usaremos os valores originais.")
-            df.sort_values("MÊS", inplace=True)
-            x_axis = "MÊS"
-
+        
         # Filtro de intervalo de datas, caso a conversão para Data tenha ocorrido
         if x_axis == "Data":
             min_date = df["Data"].min().date()
